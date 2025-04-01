@@ -1,0 +1,6 @@
+@TestimISoftuerit_HostAddress = http://localhost:5056
+
+GET {{TestimISoftuerit_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
