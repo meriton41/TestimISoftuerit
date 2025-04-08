@@ -67,7 +67,7 @@ export default function RegisterForm() {
       })
 
       // Redirect to the homepage
-      router.push("/")
+      router.push("/dashboard")
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message)
