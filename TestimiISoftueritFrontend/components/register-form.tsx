@@ -6,33 +6,79 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/context/auth-context"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import axios from "axios"
+
 
 export default function RegisterForm() {
-  const router = useRouter()
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    password: "",
-    email: "",
-  })
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [agreeTerms, setAgreeTerms] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
+  const router = useRouter()
+  const { login, user } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real app, this would call the API
-    // For demo purposes, we'll just redirect to the login page
-    router.push("/")
+    setError("")
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (!agreeTerms) {
+      setError("You must agree to the terms and conditions")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const url = "https://localhost:7176/api/Account/register"
+      const data = {
+        name: name,
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token || ""}`, // Use token from context or localStorage if available
+      }
+
+      const response = await axios.post(url, data, { headers }) // Pass headers along with data
+
+      // Retrieve token from the response
+      const token = response.data.token
+
+      // Save user data with token in auth-context and localStorage
+      login({
+        email,
+        name,
+        token
+      })
+
+      // Redirect to the homepage
+      router.push("/")
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message)
+      } else {
+        setError("Registration failed. Please try again.")
+      }
+    } finally {
+      setLoading(false)
+    }
   }
+
 
   return (
     <div className="flex min-h-screen w-full">
@@ -60,107 +106,37 @@ export default function RegisterForm() {
           </div>
           <h2 className="text-3xl font-bold mb-4">FinanceSync</h2>
           <p className="text-lg mb-6">Create an account to start managing your finances with ease.</p>
-          <div className="space-y-4 text-left bg-white/10 p-6 rounded-xl backdrop-blur">
-            <h3 className="font-medium text-lg">Why Join Us:</h3>
-            <ul className="space-y-2">
-              <li className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2 mt-0.5 text-emerald-300"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Free personal finance management</span>
-              </li>
-              <li className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2 mt-0.5 text-emerald-300"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Secure and private data storage</span>
-              </li>
-              <li className="flex items-start">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2 mt-0.5 text-emerald-300"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Insightful financial analytics</span>
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
-
+  
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">Enter your information to get started</CardDescription>
           </CardHeader>
+  
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="text-red-500 text-center mb-4">{error}</div>
+              )}
+  
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="name">First Name</Label>
                   <Input
-                    id="firstName"
+                    id="name"
                     type="text"
-                    name="firstName"
-                    placeholder="First name"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    name="lastName"
-                    placeholder="Last name"
-                    value={formData.lastName}
-                    onChange={handleChange}
+                    name="name"
+                    placeholder="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     required
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  name="username"
-                  placeholder="Choose a username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
+  
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -168,12 +144,12 @@ export default function RegisterForm() {
                   type="email"
                   name="email"
                   placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
-
+  
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -181,29 +157,53 @@ export default function RegisterForm() {
                   type="password"
                   name="password"
                   placeholder="Create a password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <p className="text-xs text-muted-foreground">Password must be at least 8 characters long</p>
               </div>
-
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
-                Create Account
+  
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+  
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="agreeTerms"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  required
+                />
+                <Label htmlFor="agreeTerms" className="text-sm">
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-primary hover:underline">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-primary hover:underline">
+                    Privacy Policy
+                  </Link>
+                </Label>
+              </div>
+  
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
+                {loading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/" className="text-emerald-600 hover:text-emerald-500 font-medium">
-                Sign In
-              </Link>
-            </p>
-          </CardFooter>
         </Card>
       </div>
     </div>
   )
 }
-
