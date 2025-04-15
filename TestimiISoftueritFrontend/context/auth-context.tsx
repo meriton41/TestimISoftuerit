@@ -1,64 +1,72 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import type React from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { authService } from "../services/api";
 
-type User = {
-  email: string
-  name?: string
-  token?: string
+interface AuthContextType {
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
-type AuthContextType = {
-  user: User | null
-  login: (user: User) => void
-  logout: () => void
-  isLoading: boolean
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const isTokenExpired = (token: string): boolean => {
-  const decoded = JSON.parse(atob(token.split('.')[1])) // Decode JWT payload
-  const currentTime = Math.floor(Date.now() / 1000) // Current time in seconds
-  return decoded.exp < currentTime
-}
+  try {
+    const decoded = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    return decoded.exp < currentTime;
+  } catch {
+    return true;
+  }
+};
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      if (userData.token && !isTokenExpired(userData.token)) {
-        setUser(userData)
-      } else {
-        localStorage.removeItem("user") // Remove expired user data
-      }
+    // Check if we have a valid token on mount
+    const token = localStorage.getItem("token");
+    if (token && !isTokenExpired(token)) {
+      setIsAuthenticated(true);
     }
-    setIsLoading(false)
-  }, [])
+  }, []);
 
-  const login = (userData: User) => {
-    setUser(userData)
-    localStorage.setItem("user", JSON.stringify(userData))
-  }
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await authService.login({ email, password });
+      const { token } = response.data;
+      localStorage.setItem("token", token);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  };
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem("user")
-  }
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+  };
 
-  return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>
-}
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-export function useAuth() {
-  const context = useContext(AuthContext)
+export const useAuth = () => {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
-}
+  return context;
+};
