@@ -1,7 +1,7 @@
 # 📊 FinanceSync(Personal Finance Tracker)
 
 ## 🌟 Përshkrim
-Personal Finance Tracker është një aplikacion modern dhe intuitiv për menaxhimin e financave personale. Ky aplikacion ju ndihmon të mbikëqyrni të ardhurat dhe shpenzimet tuaja në një mënyrë të thjeshtë dhe efektive, duke ju dhënë një pamje të qartë të gjendjes financiare.
+FinancSync është një aplikacion modern dhe intuitiv për menaxhimin e financave personale. Ky aplikacion ju ndihmon të mbikëqyrni të ardhurat dhe shpenzimet tuaja në një mënyrë të thjeshtë dhe efektive, duke ju dhënë një pamje të qartë të gjendjes financiare.
 
 ## 🎯 Qëllimet
 - **Menaxhimi i Shpenzimeve**: Gjurmimi i shpenzimeve tuaja sipas kategorive
