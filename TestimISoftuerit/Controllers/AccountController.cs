@@ -24,10 +24,10 @@ namespace TestimISoftuerit.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IUserAccount userAccount;
-        private readonly UserManager<ApplicationUser> userManager;
+        private readonly UserManager<SharedClassLibrary.Models.ApplicationUser> userManager;
         private readonly IConfiguration config;
 
-        public AccountController(IUserAccount userAccount, UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AccountController(IUserAccount userAccount, UserManager<SharedClassLibrary.Models.ApplicationUser> userManager, IConfiguration config)
         {
             this.userAccount = userAccount;
             this.userManager = userManager;
@@ -51,12 +51,21 @@ namespace TestimISoftuerit.Controllers
             var refreshToken = GenerateRefreshToken();
             SetRefreshToken(refreshToken);
 
+            // Set the JWT token in a cookie
+            Response.Cookies.Append("token", response.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddHours(1) // Match the token expiration
+            });
+
             return Ok(new
             {
                 flag = response.Flag,
                 token = response.Token,
                 message = response.Message,
-                refreshToken = refreshToken.Token // Only for debugging - remove in production
+                refreshToken = refreshToken.Token
             });
         }
 
@@ -79,22 +88,40 @@ namespace TestimISoftuerit.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDTO refreshTokenDTO)
         {
-            var refreshToken = Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("Invalid Refresh Token");
+            try
+            {
+                if (string.IsNullOrEmpty(refreshTokenDTO.Token))
+                    return BadRequest(new { message = "Token is required" });
 
-            var user = await userAccount.GetUserByRefreshToken(refreshToken);
-            if (user == null)
-                return Unauthorized("Invalid Refresh Token");
+                var response = await userAccount.RefreshToken(refreshTokenDTO.Token);
+                if (!response.Flag)
+                    return Unauthorized(new { message = response.Message });
 
-            var userSession = new UserSession(user.Id, user.UserName, user.Email, (await userManager.GetRolesAsync(user)).First());
-            string token = GenerateToken(userSession);
-            var newRefreshToken = GenerateRefreshToken();
-            SetRefreshToken(newRefreshToken);
+                // Generate a new refresh token
+                var newRefreshToken = GenerateRefreshToken();
+                SetRefreshToken(newRefreshToken);
 
-            return Ok(new { Token = token });
+                // Set the new JWT token in a cookie
+                Response.Cookies.Append("token", response.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddHours(1) // Match the token expiration
+                });
+
+                return Ok(new
+                {
+                    token = response.Token,
+                    refreshToken = newRefreshToken.Token
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while refreshing the token", error = ex.Message });
+            }
         }
 
         private string GenerateToken(UserSession user)
@@ -137,13 +164,10 @@ namespace TestimISoftuerit.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = newRefreshToken.Expired,
-                Path = "/"
+                SameSite = SameSiteMode.Strict,
+                Expires = newRefreshToken.Expired
             };
-
-            // Set the cookie without URL encoding
-            Response.Headers.Add("Set-Cookie", $"refreshToken={newRefreshToken.Token}; path=/; secure; samesite=none; httponly");
+            Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
         }
 
 

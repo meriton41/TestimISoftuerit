@@ -1,84 +1,86 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useAuth } from "@/context/auth-context"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import axios from "axios"
-
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/auth-context";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 export default function RegisterForm() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [agreeTerms, setAgreeTerms] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const router = useRouter()
-  const { login, user } = useAuth()
+  const router = useRouter();
+  const { login, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return
+      setError("Passwords do not match");
+      return;
     }
 
     if (!agreeTerms) {
-      setError("You must agree to the terms and conditions")
-      return
+      setError("You must agree to the terms and conditions");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const url = "https://localhost:7176/api/Account/register"
+      const url = "https://localhost:7176/api/Account/register";
       const data = {
         name: name,
         email: email,
         password: password,
-        confirmPassword: confirmPassword
-      }
+        confirmPassword: confirmPassword,
+      };
 
       const headers = {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${user?.token || ""}`, // Use token from context or localStorage if available
+      };
+
+      const response = await axios.post(url, data, { headers });
+
+      if (response.data && response.data.flag) {
+        // Registration successful, now login
+        await login(email, password);
+        router.push("/dashboard");
+      } else {
+        setError(
+          response.data?.message || "Registration failed. Please try again."
+        );
       }
-
-      const response = await axios.post(url, data, { headers }) // Pass headers along with data
-
-      // Retrieve token from the response
-      const token = response.data.token
-
-      // Save user data with token in auth-context and localStorage
-      login({
-        email,
-        name,
-        token
-      })
-
-      // Redirect to the homepage
-      router.push("/dashboard")
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message)
+        setError(err.response.data.message);
       } else {
-        setError("Registration failed. Please try again.")
+        setError("Registration failed. Please try again.");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
 
   return (
     <div className="flex min-h-screen w-full">
@@ -105,23 +107,29 @@ export default function RegisterForm() {
             </svg>
           </div>
           <h2 className="text-3xl font-bold mb-4">FinanceSync</h2>
-          <p className="text-lg mb-6">Create an account to start managing your finances with ease.</p>
+          <p className="text-lg mb-6">
+            Create an account to start managing your finances with ease.
+          </p>
         </div>
       </div>
-  
+
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-            <CardDescription className="text-center">Enter your information to get started</CardDescription>
+            <CardTitle className="text-2xl font-bold text-center">
+              Create an Account
+            </CardTitle>
+            <CardDescription className="text-center">
+              Enter your information to get started
+            </CardDescription>
           </CardHeader>
-  
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="text-red-500 text-center mb-4">{error}</div>
               )}
-  
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">First Name</Label>
@@ -136,7 +144,7 @@ export default function RegisterForm() {
                   />
                 </div>
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -149,7 +157,7 @@ export default function RegisterForm() {
                   required
                 />
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -161,9 +169,11 @@ export default function RegisterForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <p className="text-xs text-muted-foreground">Password must be at least 8 characters long</p>
+                <p className="text-xs text-muted-foreground">
+                  Password must be at least 8 characters long
+                </p>
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -176,7 +186,7 @@ export default function RegisterForm() {
                   required
                 />
               </div>
-  
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -191,13 +201,20 @@ export default function RegisterForm() {
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-primary hover:underline">
+                  <Link
+                    href="/privacy"
+                    className="text-primary hover:underline"
+                  >
                     Privacy Policy
                   </Link>
                 </Label>
               </div>
-  
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
+
+              <Button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                disabled={loading}
+              >
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
@@ -205,5 +222,5 @@ export default function RegisterForm() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

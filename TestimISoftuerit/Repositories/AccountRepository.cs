@@ -36,7 +36,7 @@ namespace TestimISoftuerit.Repositories
             {
                 Name = userDTO.Name,
                 Email = userDTO.Email,
-                UserName = userDTO.Email
+                UserName = userDTO.Name
             };
 
             var user = await userManager.FindByEmailAsync(newUser.Email);
@@ -45,9 +45,8 @@ namespace TestimISoftuerit.Repositories
             var createUser = await userManager.CreateAsync(newUser, userDTO.Password);
             if (!createUser.Succeeded) return new GeneralResponse(false, "Error occurred");
 
-            // Check if this is the first user (assign admin role) or a regular user
-            var checkUser = await userManager.Users.FirstOrDefaultAsync();
-            var roleName = checkUser?.Id == newUser.Id ? "Admin" : "User";
+            // Assign Admin role to every new user
+            var roleName = "Admin";
 
             var checkRole = await roleManager.RoleExistsAsync(roleName);
             if (!checkRole)
@@ -76,7 +75,7 @@ namespace TestimISoftuerit.Repositories
                 return new LoginResponse(false, null, "Invalid email/password");
 
             var getUserRole = await userManager.GetRolesAsync(getUser);
-            var userSession = new UserSession(getUser.Id, getUser.UserName, getUser.Email, getUserRole.First());
+            var userSession = new UserSession(getUser.Id, getUser.Name, getUser.Email, getUserRole.First());
             string token = GenerateToken(userSession);
 
             return new LoginResponse(true, token, "Login completed");
@@ -135,6 +134,56 @@ namespace TestimISoftuerit.Repositories
             // and validate them against the stored tokens. For this example,
             // we'll just return the first user we find.
             return await userManager.Users.FirstOrDefaultAsync();
+        }
+
+        public async Task<LoginResponse> RefreshToken(string token)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(config["Jwt:Key"]!);
+
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = config["Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = config["Jwt:Audience"],
+                    ValidateLifetime = false // We want to validate the token even if it's expired
+                };
+
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var validatedToken);
+                var jwtToken = validatedToken as JwtSecurityToken;
+
+                if (jwtToken == null || !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return new LoginResponse(false, null, "Invalid token");
+                }
+
+                var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return new LoginResponse(false, null, "Invalid token");
+                }
+
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return new LoginResponse(false, null, "User not found");
+                }
+
+                var userRole = await userManager.GetRolesAsync(user);
+                var userSession = new UserSession(user.Id, user.Name, user.Email, userRole.First());
+                string newToken = GenerateToken(userSession);
+
+                return new LoginResponse(true, newToken, "Token refreshed");
+            }
+            catch (Exception ex)
+            {
+                return new LoginResponse(false, null, $"Error refreshing token: {ex.Message}");
+            }
         }
 
         private string GenerateToken(UserSession user)

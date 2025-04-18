@@ -12,6 +12,7 @@ namespace SharedClassLibrary.Contracts
         Task<List<UserDetailsDTO>> GetUsers();
         Task<ServiceResponses.GeneralResponse> UpdateUser(string id, UserDetailsDTO userDetailsDTO);
         Task<ApplicationUser?> GetUserByRefreshToken(string refreshToken);
+        Task<ServiceResponses.LoginResponse> RefreshToken(string token);
     }
 
     public class UserAccount : IUserAccount
@@ -64,6 +65,12 @@ namespace SharedClassLibrary.Contracts
         public Task<ApplicationUser?> GetUserByRefreshToken(string refreshToken)
         {
             // Implementation of GetUserByRefreshToken method
+            throw new NotImplementedException();
+        }
+
+        public Task<ServiceResponses.LoginResponse> RefreshToken(string token)
+        {
+            // Implementation of RefreshToken method
             throw new NotImplementedException();
         }
     }

@@ -36,8 +36,16 @@ export default function AddCashForm() {
     setLoading(true);
 
     try {
-      await transactionService.addIncome({
-        source: formData.source,
+      // Validate input
+      if (!formData.source.trim()) {
+        throw new Error("Source is required");
+      }
+      if (!formData.sum || Number(formData.sum) <= 0) {
+        throw new Error("Amount must be greater than 0");
+      }
+
+      const response = await transactionService.addIncome({
+        source: formData.source.trim(),
         sum: Number(formData.sum),
         date: formData.date,
       });
@@ -57,10 +65,19 @@ export default function AddCashForm() {
       // Refresh dashboard data
       router.refresh();
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to add income");
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to add income";
+
+      // Check if the error is due to expired token
+      if (err.response?.status === 401) {
+        router.push("/");
+        return;
+      }
+
+      setError(errorMessage);
       toast({
         title: "Error adding income",
-        description: error,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -93,7 +110,7 @@ export default function AddCashForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sum">Amount</Label>
+            <Label htmlFor="sum">Amount (€)</Label>
             <Input
               id="sum"
               type="number"
@@ -101,6 +118,8 @@ export default function AddCashForm() {
               value={formData.sum}
               onChange={handleChange}
               placeholder="0.00"
+              min="0.01"
+              step="0.01"
               required
             />
           </div>

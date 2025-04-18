@@ -1,37 +1,88 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/context/auth-context";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 export default function LoginForm() {
-  const router = useRouter()
+  const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
     rememberMe: false,
-  })
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, this would call the API
-    // For demo purposes, we'll just redirect to the dashboard
-    router.push("/dashboard")
-  }
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        "https://localhost:7176/api/Account/login",
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const { token, user: userData } = response.data;
+
+      // Save token to cookies
+      Cookies.set("token", token, { secure: true, sameSite: "strict" });
+      if (response.data.refreshToken) {
+        Cookies.set("refreshToken", response.data.refreshToken, {
+          secure: true,
+          sameSite: "strict",
+        });
+      }
+
+      // Update auth context with the correct user data
+      await login(formData.email, formData.password);
+
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full">
@@ -59,7 +110,8 @@ export default function LoginForm() {
           </div>
           <h2 className="text-3xl font-bold mb-4">FinanceSync</h2>
           <p className="text-lg mb-6">
-            Your personal finance tracker that helps you manage expenses and income with ease.
+            Your personal finance tracker that helps you manage expenses and
+            income with ease.
           </p>
           <div className="space-y-4 text-left bg-white/10 p-6 rounded-xl backdrop-blur">
             <h3 className="font-medium text-lg">Key Features:</h3>
@@ -117,19 +169,27 @@ export default function LoginForm() {
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-            <CardDescription className="text-center">Sign in to your account to continue</CardDescription>
+            <CardTitle className="text-2xl font-bold text-center">
+              Welcome Back
+            </CardTitle>
+            <CardDescription className="text-center">
+              Sign in to your account to continue
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="text-red-500 text-center mb-4">{error}</div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  name="username"
-                  placeholder="Enter your username"
-                  value={formData.username}
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
                   onChange={handleChange}
                   required
                 />
@@ -138,7 +198,10 @@ export default function LoginForm() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-sm text-emerald-600 hover:text-emerald-500">
+                  <Link
+                    href="#"
+                    className="text-sm text-emerald-600 hover:text-emerald-500"
+                  >
                     Forgot password?
                   </Link>
                 </div>
@@ -158,22 +221,34 @@ export default function LoginForm() {
                   id="rememberMe"
                   name="rememberMe"
                   checked={formData.rememberMe}
-                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, rememberMe: checked === true }))}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rememberMe: checked === true,
+                    }))
+                  }
                 />
                 <Label htmlFor="rememberMe" className="text-sm font-normal">
                   Remember me for 30 days
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
-                Sign In
+              <Button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link href="/register" className="text-emerald-600 hover:text-emerald-500 font-medium">
+              <Link
+                href="/register"
+                className="text-emerald-600 hover:text-emerald-500 font-medium"
+              >
                 Sign Up
               </Link>
             </p>
@@ -181,6 +256,5 @@ export default function LoginForm() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
-

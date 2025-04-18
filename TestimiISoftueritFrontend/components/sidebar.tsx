@@ -1,36 +1,46 @@
-"use client"
+"use client";
 
-import { usePathname, useRouter } from "next/navigation"
-import Link from "next/link"
-import { Home, PlusCircle, User, LogOut, Menu, X, BarChart3, CreditCard, Settings } from "lucide-react"
-import { useState, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Home,
+  PlusCircle,
+  User,
+  LogOut,
+  Menu,
+  X,
+  BarChart3,
+  CreditCard,
+  Settings,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface SidebarProps {
   user: {
-    name: string
-    role: string
-    isOnline: boolean
-  }
+    name: string;
+    role: string;
+    isOnline: boolean;
+  };
 }
 
 export default function AppSidebar({ user }: SidebarProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     // In a real app, this would call the API to logout
-    router.push("/")
-  }
+    router.push("/");
+  };
 
   const isActive = (path: string) => {
-    return pathname === path
-  }
+    return pathname === path;
+  };
 
   // Close mobile menu when route changes
   useEffect(() => {
-    setIsMobileMenuOpen(false)
-  }, [pathname])
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -50,7 +60,9 @@ export default function AppSidebar({ user }: SidebarProps) {
             <Link
               href="/dashboard"
               className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                isActive("/dashboard") ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-100"
+                isActive("/dashboard")
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               <Home className="h-5 w-5" />
@@ -60,19 +72,35 @@ export default function AppSidebar({ user }: SidebarProps) {
             <Link
               href="/dashboard/add-cash"
               className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                isActive("/dashboard/add-cash") ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-100"
+                isActive("/dashboard/add-cash")
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               <PlusCircle className="h-5 w-5" />
               <span>Add Income</span>
             </Link>
 
-            <Link href="#" className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+            <Link
+              href="/dashboard/expenses"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                isActive("/dashboard/expenses")
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
               <CreditCard className="h-5 w-5" />
               <span>Expenses</span>
             </Link>
 
-            <Link href="#" className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+            <Link
+              href="/dashboard/reports"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                isActive("/dashboard/reports")
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
               <BarChart3 className="h-5 w-5" />
               <span>Reports</span>
             </Link>
@@ -83,14 +111,19 @@ export default function AppSidebar({ user }: SidebarProps) {
               <Link
                 href="/dashboard/profile"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                  isActive("/dashboard/profile") ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-100"
+                  isActive("/dashboard/profile")
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
 
-              <Link href="#" className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+              <Link
+                href="#"
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
+              >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </Link>
@@ -128,13 +161,20 @@ export default function AppSidebar({ user }: SidebarProps) {
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="h-10 w-10 rounded-full bg-white shadow-md flex items-center justify-center"
         >
-          {isMobileMenuOpen ? <X className="h-5 w-5 text-gray-700" /> : <Menu className="h-5 w-5 text-gray-700" />}
+          {isMobileMenuOpen ? (
+            <X className="h-5 w-5 text-gray-700" />
+          ) : (
+            <Menu className="h-5 w-5 text-gray-700" />
+          )}
         </button>
       </div>
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
           <div
             className="absolute top-0 left-0 h-full w-64 bg-white p-4 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -155,7 +195,9 @@ export default function AppSidebar({ user }: SidebarProps) {
               <Link
                 href="/dashboard"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                  isActive("/dashboard") ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-100"
+                  isActive("/dashboard")
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <Home className="h-5 w-5" />
@@ -165,19 +207,35 @@ export default function AppSidebar({ user }: SidebarProps) {
               <Link
                 href="/dashboard/add-cash"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                  isActive("/dashboard/add-cash") ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-100"
+                  isActive("/dashboard/add-cash")
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <PlusCircle className="h-5 w-5" />
                 <span>Add Income</span>
               </Link>
 
-              <Link href="#" className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+              <Link
+                href="/dashboard/expenses"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                  isActive("/dashboard/expenses")
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
                 <CreditCard className="h-5 w-5" />
                 <span>Expenses</span>
               </Link>
 
-              <Link href="#" className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+              <Link
+                href="/dashboard/reports"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                  isActive("/dashboard/reports")
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
                 <BarChart3 className="h-5 w-5" />
                 <span>Reports</span>
               </Link>
@@ -187,14 +245,19 @@ export default function AppSidebar({ user }: SidebarProps) {
               <Link
                 href="/dashboard/profile"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                  isActive("/dashboard/profile") ? "bg-emerald-50 text-emerald-600" : "text-gray-700 hover:bg-gray-100"
+                  isActive("/dashboard/profile")
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
 
-              <Link href="#" className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">
+              <Link
+                href="#"
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
+              >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </Link>
@@ -226,6 +289,5 @@ export default function AppSidebar({ user }: SidebarProps) {
         </div>
       )}
     </>
-  )
+  );
 }
-

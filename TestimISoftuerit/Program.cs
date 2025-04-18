@@ -10,6 +10,7 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using TestimISoftuerit.Repositories;
 using Microsoft.AspNetCore.CookiePolicy;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,7 +88,42 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        NameClaimType = ClaimTypes.NameIdentifier,
+        RoleClaimType = ClaimTypes.Role
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // Try to get the token from the Authorization header first
+            var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            // If not found in header, try to get it from cookies
+            if (string.IsNullOrEmpty(token))
+            {
+                token = context.Request.Cookies["token"];
+            }
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = async context =>
+        {
+            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId != null)
+            {
+                var user = await userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    context.HttpContext.Items["User"] = user;
+                }
+            }
+        }
     };
 });
 
