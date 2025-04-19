@@ -1,4 +1,4 @@
-using TestimISoftuerit.Data;
+using TestimISoftuerit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +7,8 @@ using Microsoft.OpenApi.Models;
 using SharedClassLibrary.Contracts;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using TestimISoftuerit.Data;
+using TestimISoftuerit.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Add Swagger Configuration
+// Swagger Configuration
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
@@ -26,22 +28,19 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
-// Database Configuration
+// Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// Authorization and Identity Setup
-builder.Services.AddAuthorization();
+// Identity Auth
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Dependency Injection for user account services
-builder.Services.AddScoped<IUserAccount, AccountRepository>();
+builder.Services.AddAuthorization();
 
-// JWT Authentication Setup
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -54,6 +53,7 @@ builder.Services.AddAuthentication(options =>
     {
         throw new ArgumentNullException("Jwt:Key", "JWT key is not set in the configuration.");
     }
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -62,23 +62,30 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
     };
 });
 
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", builder =>
+    options.AddPolicy("AllowReactApp", corsBuilder =>
     {
-        builder.WithOrigins("http://localhost:3000")  // Specify your React app URL
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();  // Important if you're using cookies or authentication headers
+        corsBuilder.WithOrigins("http://localhost:3000")
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
     });
 });
+
+// Register Repositories & Services
+builder.Services.AddScoped<IUserAccount, AccountRepository>();
+builder.Services.AddScoped<EmailService>(); // Moved before `Build()`
+
+// Build App
 var app = builder.Build();
 
-// Use CORS before Authentication and Authorization
+// Middleware
 app.UseCors("AllowReactApp");
 
 if (app.Environment.IsDevelopment())
@@ -89,7 +96,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();  // Ensure JWT authentication is used
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

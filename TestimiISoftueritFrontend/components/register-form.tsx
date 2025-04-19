@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import axios from "axios"
 
-
 export default function RegisterForm() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -22,7 +21,6 @@ export default function RegisterForm() {
   const [error, setError] = useState("")
 
   const router = useRouter()
-  const { login, user } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,24 +48,13 @@ export default function RegisterForm() {
       }
 
       const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user?.token || ""}`, // Use token from context or localStorage if available
+        "Content-Type": "application/json"
       }
 
-      const response = await axios.post(url, data, { headers }) // Pass headers along with data
+      await axios.post(url, data, { headers })
 
-      // Retrieve token from the response
-      const token = response.data.token
-
-      // Save user data with token in auth-context and localStorage
-      login({
-        email,
-        name,
-        token
-      })
-
-      // Redirect to the homepage
-      router.push("/dashboard")
+      // ✅ Redirect to email verification notice page
+      router.push("/verify-email/notice")
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message)
@@ -78,7 +65,6 @@ export default function RegisterForm() {
       setLoading(false)
     }
   }
-
 
   return (
     <div className="flex min-h-screen w-full">
@@ -108,20 +94,20 @@ export default function RegisterForm() {
           <p className="text-lg mb-6">Create an account to start managing your finances with ease.</p>
         </div>
       </div>
-  
+
       <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">Enter your information to get started</CardDescription>
           </CardHeader>
-  
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="text-red-500 text-center mb-4">{error}</div>
               )}
-  
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">First Name</Label>
@@ -136,7 +122,7 @@ export default function RegisterForm() {
                   />
                 </div>
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -149,7 +135,7 @@ export default function RegisterForm() {
                   required
                 />
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -163,7 +149,7 @@ export default function RegisterForm() {
                 />
                 <p className="text-xs text-muted-foreground">Password must be at least 8 characters long</p>
               </div>
-  
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -176,7 +162,7 @@ export default function RegisterForm() {
                   required
                 />
               </div>
-  
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -196,7 +182,7 @@ export default function RegisterForm() {
                   </Link>
                 </Label>
               </div>
-  
+
               <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
