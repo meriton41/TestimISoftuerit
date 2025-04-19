@@ -1,4 +1,3 @@
-using TestimISoftuerit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +7,6 @@ using SharedClassLibrary.Contracts;
 using SharedClassLibrary.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
-using TestimISoftuerit.Repositories;
 using Microsoft.AspNetCore.CookiePolicy;
 using System.Security.Claims;
 using TestimISoftuerit.Data;
@@ -42,7 +40,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddAuthorization();
 
 // Configure Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+builder.Services.AddIdentity<SharedClassLibrary.Models.ApplicationUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = true;
@@ -54,7 +52,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 // Identity Auth
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentity<SharedClassLibrary.Models.ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
