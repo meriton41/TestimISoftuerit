@@ -1,64 +1,142 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { authService } from "@/services/api";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
-type User = {
-  email: string
-  name?: string
-  token?: string
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 }
 
-type AuthContextType = {
-  user: User | null
-  login: (user: User) => void
-  logout: () => void
-  isLoading: boolean
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-const isTokenExpired = (token: string): boolean => {
-  const decoded = JSON.parse(atob(token.split('.')[1])) // Decode JWT payload
-  const currentTime = Math.floor(Date.now() / 1000) // Current time in seconds
-  return decoded.exp < currentTime
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      const userData = JSON.parse(storedUser)
-      if (userData.token && !isTokenExpired(userData.token)) {
-        setUser(userData)
-      } else {
-        localStorage.removeItem("user") // Remove expired user data
-      }
-    }
-    setIsLoading(false)
-  }, [])
+    initializeAuth();
+  }, []);
 
-  const login = (userData: User) => {
-    setUser(userData)
-    localStorage.setItem("user", JSON.stringify(userData))
-  }
+  const initializeAuth = async () => {
+    try {
+      const token = Cookies.get("token");
+      const refreshToken = Cookies.get("refreshToken");
+      const userCookie = Cookies.get("user");
+
+      if (!token || !userCookie) {
+        setLoading(false);
+        return;
+      }
+
+      const decodedToken = jwtDecode(token) as any;
+      const isExpired = decodedToken.exp * 1000 < Date.now();
+
+      if (isExpired && refreshToken) {
+        try {
+          const response = await authService.refreshToken();
+          if (response.data.token) {
+            const newDecodedToken = jwtDecode(response.data.token) as any;
+            const userData = {
+              id: newDecodedToken[
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+              ],
+              name: newDecodedToken[
+                "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+              ],
+              email:
+                newDecodedToken[
+                  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+                ],
+              role: newDecodedToken[
+                "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+              ],
+            };
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error("Error refreshing token:", error);
+          logout();
+        }
+      } else {
+        setUser(JSON.parse(userCookie));
+      }
+    } catch (error) {
+      console.error("Error initializing auth:", error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await authService.login({ email, password });
+      if (response.data.token) {
+        const decodedToken = jwtDecode(response.data.token) as any;
+        const userData = {
+          id: decodedToken[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+          ],
+          name: decodedToken[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+          ],
+          email:
+            decodedToken[
+              "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+            ],
+          role: decodedToken[
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          ],
+        };
+        setUser(userData);
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  };
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem("user")
-  }
+    authService.logout();
+    setUser(null);
+    router.push("/login-form");
+  };
 
-  return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }

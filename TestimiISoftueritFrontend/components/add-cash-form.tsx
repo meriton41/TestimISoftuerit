@@ -1,40 +1,89 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowUpRight } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { transactionService } from "../services/api";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AddCashForm() {
   const [formData, setFormData] = useState({
     source: "",
     sum: "",
     date: new Date().toISOString().split("T")[0],
-  })
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, this would call the API
-    console.log("Form submitted:", formData)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    // Reset form
-    setFormData({
-      source: "",
-      sum: "",
-      date: new Date().toISOString().split("T")[0],
-    })
-  }
+    try {
+      // Validate input
+      if (!formData.source.trim()) {
+        throw new Error("Source is required");
+      }
+      if (!formData.sum || Number(formData.sum) <= 0) {
+        throw new Error("Amount must be greater than 0");
+      }
+
+      const response = await transactionService.addIncome({
+        source: formData.source.trim(),
+        sum: Number(formData.sum),
+        date: formData.date,
+      });
+
+      toast({
+        title: "Income added successfully",
+        description: `Added ${formData.sum} € from ${formData.source}`,
+      });
+
+      // Reset form
+      setFormData({
+        source: "",
+        sum: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      // Refresh dashboard data
+      router.refresh();
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to add income";
+
+      // Check if the error is due to expired token
+      if (err.response?.status === 401) {
+        router.push("/");
+        return;
+      }
+
+      setError(errorMessage);
+      toast({
+        title: "Error adding income",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card className="w-full max-w-md">
@@ -61,7 +110,7 @@ export default function AddCashForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sum">Amount</Label>
+            <Label htmlFor="sum">Amount (€)</Label>
             <Input
               id="sum"
               type="number"
@@ -69,21 +118,35 @@ export default function AddCashForm() {
               value={formData.sum}
               onChange={handleChange}
               placeholder="0.00"
+              min="0.01"
+              step="0.01"
               required
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <Input id="date" type="date" name="date" value={formData.date} onChange={handleChange} required />
+            <Input
+              id="date"
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+            />
           </div>
 
-          <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
-            Add Income
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <Button
+            type="submit"
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Add Income"}
           </Button>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
-
