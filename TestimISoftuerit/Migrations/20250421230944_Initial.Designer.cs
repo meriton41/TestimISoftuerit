@@ -12,8 +12,8 @@ using TestimISoftuerit.Data;
 namespace TestimISoftuerit.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250416134510_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250421230944_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -174,7 +174,16 @@ namespace TestimISoftuerit.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("EmailConfirmationToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EmailConfirmationTokenCreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
