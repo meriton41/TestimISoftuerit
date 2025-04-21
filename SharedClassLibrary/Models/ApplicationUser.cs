@@ -11,5 +11,8 @@ namespace SharedClassLibrary.Models
 
     public string Name { get; set; } = string.Empty;
     public ICollection<RefreshToken> RefreshTokens { get; set; }
+    public bool IsEmailConfirmed { get; set; } = false;
+    public string? EmailConfirmationToken { get; set; }
+    public DateTime? EmailConfirmationTokenCreatedAt { get; set; }
   }
 }

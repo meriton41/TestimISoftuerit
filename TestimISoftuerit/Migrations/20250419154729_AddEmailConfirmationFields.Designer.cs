@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TestimISoftuerit.Data;
 
@@ -11,9 +12,11 @@ using TestimISoftuerit.Data;
 namespace TestimISoftuerit.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250419154729_AddEmailConfirmationFields")]
+    partial class AddEmailConfirmationFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -173,9 +176,6 @@ namespace TestimISoftuerit.Migrations
 
                     b.Property<string>("EmailConfirmationToken")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("EmailConfirmationTokenCreatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");

@@ -4,7 +4,7 @@ using SharedClassLibrary.Models;
 
 namespace TestimISoftuerit.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<SharedClassLibrary.Models.ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {

@@ -18,8 +18,7 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using TestimISoftuerit.Data;
-using TestimISoftuerit.Data;
-using System.Net; // ✅ Add this for ApplicationDbContext
+using System.Net;
 
 namespace TestimISoftuerit.Controllers
 {
@@ -30,16 +29,18 @@ namespace TestimISoftuerit.Controllers
         private readonly IUserAccount userAccount;
         private readonly UserManager<SharedClassLibrary.Models.ApplicationUser> userManager;
         private readonly IConfiguration config;
-        private readonly ApplicationDbContext _context; // ✅ Add this
+        private readonly ApplicationDbContext _context;
 
-        public AccountController(IUserAccount userAccount, UserManager<SharedClassLibrary.Models.ApplicationUser> userManager, IConfiguration config)
-        // ✅ Inject ApplicationDbContext
-        public AccountController(IUserAccount userAccount, ApplicationDbContext context)
+        public AccountController(
+            IUserAccount userAccount,
+            UserManager<SharedClassLibrary.Models.ApplicationUser> userManager,
+            IConfiguration config,
+            ApplicationDbContext context)
         {
             this.userAccount = userAccount;
             this.userManager = userManager;
             this.config = config;
-            _context = context;
+            this._context = context;
         }
 
         [HttpPost("register")]
@@ -180,43 +181,60 @@ namespace TestimISoftuerit.Controllers
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
-            if (string.IsNullOrWhiteSpace(token))
+            try
             {
-                Console.WriteLine("❌ Token is missing from the request.");
-                return BadRequest(new { message = "Token is missing" });
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    Console.WriteLine("❌ Token is missing from the request.");
+                    return BadRequest(new { message = "Token is missing" });
+                }
+
+                Console.WriteLine("👉 Received token: " + token);
+
+                // First URL-decode the token from the query parameter
+                var decodedToken = WebUtility.UrlDecode(token);
+                // Replace spaces with + since they might have been converted during URL encoding
+                decodedToken = decodedToken.Replace(" ", "+");
+                Console.WriteLine("👉 URL-decoded token: " + decodedToken);
+
+                // Find user with matching token
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.EmailConfirmationToken == decodedToken);
+
+                if (user == null)
+                {
+                    Console.WriteLine("❌ No user found with matching token.");
+                    return BadRequest(new { message = "Invalid token" });
+                }
+
+                // Check if token is expired (24 hours validity)
+                var tokenCreationTime = user.EmailConfirmationTokenCreatedAt;
+                if (tokenCreationTime.HasValue && DateTime.UtcNow > tokenCreationTime.Value.AddHours(24))
+                {
+                    Console.WriteLine("❌ Token has expired.");
+                    return BadRequest(new { message = "Token has expired. Please request a new verification email." });
+                }
+
+                if (user.IsEmailConfirmed)
+                {
+                    Console.WriteLine("ℹ️ Email already verified.");
+                    return Ok(new { message = "Email already verified" });
+                }
+
+                user.IsEmailConfirmed = true;
+                user.EmailConfirmationToken = null;
+                user.EmailConfirmationTokenCreatedAt = null;
+
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine("✅ Email verified successfully for user: " + user.Email);
+                return Ok(new { message = "Email verified successfully" });
             }
-
-            Console.WriteLine("👉 Received token: " + token);
-
-            var decodedToken = WebUtility.UrlDecode(token); // just once is enough
-
-            Console.WriteLine("👉 Decoded token: " + decodedToken);
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailConfirmationToken == decodedToken);
-
-            if (user == null)
+            catch (Exception ex)
             {
-                Console.WriteLine("❌ No user found with matching token.");
-                return NotFound(new { message = "Invalid or expired token" });
+                Console.WriteLine($"❌ Error verifying email: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred while verifying your email" });
             }
-
-            Console.WriteLine("✅ Found user with matching token: " + user.Email);
-            Console.WriteLine("📬 Token from DB: " + user.EmailConfirmationToken);
-
-            if (user.IsEmailConfirmed)
-            {
-                Console.WriteLine("ℹ️ Email already verified.");
-                return Ok(new { message = "Email already verified" });
-            }
-
-            user.IsEmailConfirmed = true;
-            user.EmailConfirmationToken = null;
-
-            await _context.SaveChangesAsync();
-
-            Console.WriteLine("✅ Email verified successfully for user: " + user.Email);
-
-            return Ok(new { message = "Email verified successfully" });
         }
 
 

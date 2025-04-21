@@ -214,7 +214,7 @@ export const transactionApi = {
 };
 
 export const transactionService = {
-  addIncome: async (data: { source: string; sum: number; date: string }) => {
+  addIncome: async (data: { source: string; amount: number; date: string; type: string }) => {
     try {
       const userCookie = Cookies.get('user');
       const user = userCookie ? JSON.parse(userCookie) : null;

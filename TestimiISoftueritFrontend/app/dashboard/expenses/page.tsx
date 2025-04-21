@@ -92,7 +92,7 @@ export default function ExpensesPage() {
 
   if (loading) {
     return (
-      <DashboardLayout user={formattedUser}>
+      <DashboardLayout>
         <div className="flex items-center justify-center h-full pl-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
@@ -102,7 +102,7 @@ export default function ExpensesPage() {
 
   if (!user) {
     return (
-      <DashboardLayout user={formattedUser}>
+      <DashboardLayout>
         <div className="flex items-center justify-center h-full pl-64">
           <p className="text-lg text-gray-600">
             Please log in to view your expenses
@@ -113,7 +113,7 @@ export default function ExpensesPage() {
   }
 
   return (
-    <DashboardLayout user={formattedUser}>
+    <DashboardLayout>
       <div className="pl-64 min-h-screen">
         <div className="p-8 space-y-6">
           <div className="flex items-center justify-between">
@@ -228,10 +228,10 @@ export default function ExpensesPage() {
                 </Card>
               </div>
 
-              <ExpensesTable
-                expenses={expenses}
-                onExpenseDeleted={fetchExpenses}
-              />
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Recent Expenses</h2>
+                <ExpensesTable />
+              </div>
             </CardContent>
           </Card>
         </div>

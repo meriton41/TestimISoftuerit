@@ -14,7 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 export default function AddCashForm() {
   const [formData, setFormData] = useState({
     source: "",
-    sum: "",
+    amount: "",
     date: new Date().toISOString().split("T")[0],
   });
   const [loading, setLoading] = useState(false);
@@ -40,25 +40,26 @@ export default function AddCashForm() {
       if (!formData.source.trim()) {
         throw new Error("Source is required");
       }
-      if (!formData.sum || Number(formData.sum) <= 0) {
+      if (!formData.amount || Number(formData.amount) <= 0) {
         throw new Error("Amount must be greater than 0");
       }
 
       const response = await transactionService.addIncome({
         source: formData.source.trim(),
-        sum: Number(formData.sum),
+        amount: Number(formData.amount),
         date: formData.date,
+        type: "income",
       });
 
       toast({
         title: "Income added successfully",
-        description: `Added ${formData.sum} € from ${formData.source}`,
+        description: `Added ${formData.amount} € from ${formData.source}`,
       });
 
       // Reset form
       setFormData({
         source: "",
-        sum: "",
+        amount: "",
         date: new Date().toISOString().split("T")[0],
       });
 
@@ -110,12 +111,12 @@ export default function AddCashForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sum">Amount (€)</Label>
+            <Label htmlFor="amount">Amount (€)</Label>
             <Input
-              id="sum"
+              id="amount"
               type="number"
-              name="sum"
-              value={formData.sum}
+              name="amount"
+              value={formData.amount}
               onChange={handleChange}
               placeholder="0.00"
               min="0.01"

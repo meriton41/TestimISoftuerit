@@ -67,13 +67,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ],
             };
             setUser(userData);
+            Cookies.set("user", JSON.stringify(userData), {
+              secure: true,
+              sameSite: "strict",
+            });
           }
         } catch (error) {
           console.error("Error refreshing token:", error);
           logout();
         }
       } else {
-        setUser(JSON.parse(userCookie));
+        const userData = JSON.parse(userCookie);
+        if (userData && typeof userData === "object") {
+          setUser({
+            id: userData.id || "",
+            name: userData.name || "",
+            email: userData.email || "",
+            role: userData.role || "",
+          });
+        }
       }
     } catch (error) {
       console.error("Error initializing auth:", error);
@@ -104,6 +116,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ],
         };
         setUser(userData);
+        Cookies.set("user", JSON.stringify(userData), {
+          secure: true,
+          sameSite: "strict",
+        });
         router.push("/dashboard");
       }
     } catch (error) {

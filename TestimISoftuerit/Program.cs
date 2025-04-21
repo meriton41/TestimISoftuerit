@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.CookiePolicy;
 using System.Security.Claims;
 using TestimISoftuerit.Data;
 using TestimISoftuerit.Services;
+using TestimISoftuerit.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,10 +52,6 @@ builder.Services.AddIdentity<SharedClassLibrary.Models.ApplicationUser, Identity
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
-// Identity Auth
-builder.Services.AddIdentity<SharedClassLibrary.Models.ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
 
 // Configure Identity options
 builder.Services.Configure<IdentityOptions>(options =>
@@ -118,7 +115,7 @@ builder.Services.AddAuthentication(options =>
         },
         OnTokenValidated = async context =>
         {
-            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<SharedClassLibrary.Models.ApplicationUser>>();
             var userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId != null)
             {
@@ -129,20 +126,19 @@ builder.Services.AddAuthentication(options =>
                 }
             }
         }
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
     };
 });
 
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", corsBuilder =>
+    options.AddPolicy("AllowReactApp", policy =>
     {
-        builder
-            .WithOrigins("http://localhost:3000", "https://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()
+              .WithExposedHeaders("Set-Cookie");
     });
 });
 
@@ -153,13 +149,7 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
     options.MinimumSameSitePolicy = SameSiteMode.None;
     options.Secure = CookieSecurePolicy.Always;
     options.HttpOnly = HttpOnlyPolicy.Always;
-        corsBuilder.WithOrigins("http://localhost:3000")
-                   .AllowAnyHeader()
-                   .AllowAnyMethod()
-                   .AllowCredentials();
-    });
 });
-
 
 // Register Repositories & Services
 builder.Services.AddScoped<IUserAccount, AccountRepository>();

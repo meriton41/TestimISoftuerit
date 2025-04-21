@@ -1,9 +1,17 @@
-"use client"
-import DashboardLayout from "@/components/dashboard-layout"
-import ProfileDetails from "@/components/profile-details"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
+"use client";
+import DashboardLayout from "@/components/dashboard-layout";
+import ProfileDetails from "@/components/profile-details";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 export default function Profile() {
   // In a real app, this data would come from the API
@@ -14,7 +22,7 @@ export default function Profile() {
     password: "Password123",
     role: "User",
     isOnline: true,
-  }
+  };
 
   // Mock data for the spending chart
   const spendingData = [
@@ -24,16 +32,16 @@ export default function Profile() {
     { name: "Apr", amount: 70 },
     { name: "May", amount: 90 },
     { name: "Jun", amount: 110 },
-  ]
+  ];
 
   return (
-    <DashboardLayout
-      user={{ name: userData.name + " " + userData.surname, role: userData.role, isOnline: userData.isOnline }}
-    >
+    <DashboardLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
-          <p className="text-muted-foreground">Manage your account settings and preferences</p>
+          <p className="text-muted-foreground">
+            Manage your account settings and preferences
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -103,6 +111,5 @@ export default function Profile() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }
-

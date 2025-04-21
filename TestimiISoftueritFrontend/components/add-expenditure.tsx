@@ -84,10 +84,11 @@ export default function AddExpenditure() {
       }
 
       const response = await transactionService.addExpense({
-        purpose: formData.purpose.trim(),
-        sum: Number(formData.sum),
+        vendor: formData.purpose.trim(),
+        categoryId: formData.category,
+        amount: formData.sum.toString(),
         date: formData.date,
-        category: formData.category,
+        description: formData.purpose.trim(),
       });
 
       toast({

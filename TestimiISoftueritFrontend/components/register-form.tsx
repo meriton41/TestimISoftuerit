@@ -28,7 +28,6 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const router = useRouter()
   const router = useRouter();
   const { login, user } = useAuth();
 
@@ -58,20 +57,12 @@ export default function RegisterForm() {
       };
 
       const headers = {
-        "Content-Type": "application/json"
-      }
-
-      await axios.post(url, data, { headers })
-
-      // ✅ Redirect to email verification notice page
-      router.push("/verify-email/notice")
         "Content-Type": "application/json",
       };
 
       const response = await axios.post(url, data, { headers });
 
       if (response.data && response.data.flag) {
-        // Registration successful, now login
         await login(email, password);
         router.push("/dashboard");
       } else {
@@ -86,10 +77,6 @@ export default function RegisterForm() {
         setError("Registration failed. Please try again.");
       }
     } finally {
-      setLoading(false)
-    }
-  }
-
       setLoading(false);
     }
   };
@@ -222,8 +209,6 @@ export default function RegisterForm() {
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
-
               <Button
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
@@ -236,7 +221,5 @@ export default function RegisterForm() {
         </Card>
       </div>
     </div>
-  )
-}
   );
 }

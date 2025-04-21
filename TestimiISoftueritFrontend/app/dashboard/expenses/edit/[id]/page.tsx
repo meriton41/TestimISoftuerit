@@ -9,10 +9,14 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface Expense {
   id: number;
-  purpose: string;
-  category: string;
-  sum: number;
+  vendor: string;
+  amount: number;
   date: string;
+  category: {
+    id: number;
+    name: string;
+  };
+  description?: string;
 }
 
 export default function EditExpensePage({
@@ -39,10 +43,13 @@ export default function EditExpensePage({
 
         setExpense({
           id: expenseTransaction.id,
-          purpose: expenseTransaction.purpose,
-          category: expenseTransaction.category,
-          sum: expenseTransaction.sum,
+          vendor: expenseTransaction.purpose,
+          amount: expenseTransaction.sum,
           date: expenseTransaction.date,
+          category: {
+            id: 0, // You'll need to get the actual category ID
+            name: expenseTransaction.category,
+          },
         });
       } catch (error) {
         toast({
@@ -63,6 +70,10 @@ export default function EditExpensePage({
     router.push("/dashboard/expenses");
   };
 
+  const handleClose = () => {
+    router.push("/dashboard/expenses");
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -70,6 +81,17 @@ export default function EditExpensePage({
   if (!expense) {
     return <div>Expense not found</div>;
   }
+
+  const transformedExpense = {
+    id: expense.id,
+    vendor: expense.vendor,
+    amount: expense.amount,
+    date: expense.date,
+    category: {
+      id: 0, // You'll need to get the actual category ID
+      name: expense.category.name,
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -83,7 +105,11 @@ export default function EditExpensePage({
           <CardTitle>Edit Expense</CardTitle>
         </CardHeader>
         <CardContent>
-          <EditExpenseForm expense={expense} onSuccess={handleSuccess} />
+          <EditExpenseForm
+            expense={transformedExpense}
+            onSuccess={handleSuccess}
+            onClose={handleClose}
+          />
         </CardContent>
       </Card>
     </div>

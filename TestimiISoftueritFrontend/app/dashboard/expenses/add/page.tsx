@@ -11,6 +11,10 @@ export default function AddExpensePage() {
     router.push("/dashboard/expenses");
   };
 
+  const handleCancel = () => {
+    router.push("/dashboard/expenses");
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -25,7 +29,7 @@ export default function AddExpensePage() {
           <CardTitle>New Expense</CardTitle>
         </CardHeader>
         <CardContent>
-          <AddExpenseForm onSuccess={handleSuccess} />
+          <AddExpenseForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </CardContent>
       </Card>
     </div>

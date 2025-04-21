@@ -34,7 +34,7 @@ export default function ReportsLayout({ children }: ReportsLayoutProps) {
 
   return (
     <div className="flex min-h-screen">
-      <AppSidebar user={user} />
+      <AppSidebar user={{ ...user, isOnline: true }} />
       <main className="flex-1 p-8 ml-64">{children}</main>
     </div>
   );

@@ -40,7 +40,7 @@ export default function AddCash() {
   };
 
   return (
-    <DashboardLayout user={userData}>
+    <DashboardLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight">Add Income</h1>

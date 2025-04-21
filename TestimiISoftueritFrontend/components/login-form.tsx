@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { authService } from "@/services/api";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -45,35 +46,19 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "https://localhost:7176/api/Account/login",
-        {
-          email: formData.email,
-          password: formData.password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      const { token, user: userData } = response.data;
-
-      // Save token to cookies
-      Cookies.set("token", token, { secure: true, sameSite: "strict" });
-      if (response.data.refreshToken) {
-        Cookies.set("refreshToken", response.data.refreshToken, {
-          secure: true,
-          sameSite: "strict",
-        });
+      if (response.data.flag) {
+        // Update auth context with the correct user data
+        await login(formData.email, formData.password);
+        // Redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        setError(response.data.message || "Login failed. Please try again.");
       }
-
-      // Update auth context with the correct user data
-      await login(formData.email, formData.password);
-
-      // Redirect to dashboard
-      router.push("/dashboard");
     } catch (err: any) {
       console.error("Login error:", err);
       setError(
