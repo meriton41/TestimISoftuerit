@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Identity;
 using System.Linq;
 using TestimISoftuerit.Data;
 using System.Net;
+using SharedClassLibrary.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace TestimISoftuerit.Controllers
 {
@@ -86,13 +88,51 @@ namespace TestimISoftuerit.Controllers
         }
 
         [HttpPatch("update/{id}")]
-        public async Task<IActionResult> UpdateUser(string id, UserDetailsDTO userDetailsDTO)
+        [Authorize]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UserDetailsDTO userDetailsDTO)
         {
-            var response = await userAccount.UpdateUser(id, userDetailsDTO);
-            if (!response.Flag)
-                return BadRequest(response);
+            try
+            {
+                // Get the current user's ID from the authentication token
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId) || userId != id)
+                {
+                    return Unauthorized();
+                }
 
-            return Ok(response);
+                var user = await userManager.FindByIdAsync(id);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                // Update name
+                if (!string.IsNullOrEmpty(userDetailsDTO.Name))
+                {
+                    user.Name = userDetailsDTO.Name;
+                }
+
+                var updateResult = await userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
+                {
+                    return BadRequest(new { message = "Failed to update profile", errors = updateResult.Errors });
+                }
+
+                // Get updated user's roles
+                var roles = await userManager.GetRolesAsync(user);
+                var role = roles.FirstOrDefault() ?? "User";
+
+                return Ok(new UserDTO
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the profile", error = ex.Message });
+            }
         }
 
         [HttpPost("refresh-token")]
@@ -237,7 +277,6 @@ namespace TestimISoftuerit.Controllers
             }
         }
 
-
-
     }
 }
+

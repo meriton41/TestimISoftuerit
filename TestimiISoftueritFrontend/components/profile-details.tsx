@@ -8,47 +8,41 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Pencil, Save } from "lucide-react"
 
-interface ProfileDetailsProps {
-  user: {
-    name: string
-    surname: string
-    username: string
-    password: string
-  }
+interface User {
+  id: string
+  name: string
+  username: string
+  role: string
+  email: string
 }
 
-export default function ProfileDetails({ user }: ProfileDetailsProps) {
+interface ProfileDetailsProps {
+  user: User
+  onUpdate: (updatedData: Partial<User>) => Promise<void>
+}
+
+export default function ProfileDetails({ user, onUpdate }: ProfileDetailsProps) {
+  const [name, setName] = useState(user.name)
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    name: user.name,
-    surname: user.surname,
-    username: user.username,
-    password: user.password,
-  })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real app, this would call the API
-    console.log("Form submitted:", formData)
-    setIsEditing(false)
+    try {
+      await onUpdate({ name })
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Error updating profile:', error)
+    }
   }
 
   return (
     <Card>
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Profile Information</CardTitle>
-        <Button
+        {/* <Button
           variant={isEditing ? "default" : "outline"}
           size="sm"
-          onClick={() => (isEditing ? handleSubmit : setIsEditing(true))}
+          onClick={handleSubmit}
           type={isEditing ? "submit" : "button"}
           form={isEditing ? "profile-form" : undefined}
         >
@@ -63,52 +57,57 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
               Edit
             </>
           )}
-        </Button>
+        </Button> */}
       </CardHeader>
       <CardContent>
         <form id="profile-form" onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">First Name</Label>
-              {isEditing ? (
-                <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
-              ) : (
-                <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.name}</div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="surname">Last Name</Label>
-              {isEditing ? (
-                <Input id="surname" name="surname" value={formData.surname} onChange={handleChange} required />
-              ) : (
-                <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.surname}</div>
-              )}
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            {isEditing ? (
-              <Input id="username" name="username" value={formData.username} onChange={handleChange} required />
-            ) : (
-              <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.username}</div>
-            )}
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!isEditing}
+            />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              value={user.email}
+              disabled
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Input
+              id="role"
+              value={user.role}
+              disabled
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
             {isEditing ? (
-              <Input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setName(user.name)
+                    setIsEditing(false)
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </>
             ) : (
-              <div className="p-2 rounded-md bg-gray-50 border border-gray-100">••••••••</div>
+              <Button
+                type="button"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit Profile
+              </Button>
             )}
           </div>
         </form>

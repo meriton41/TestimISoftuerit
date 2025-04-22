@@ -113,6 +113,11 @@ builder.Services.AddAuthentication(options =>
             }
             return Task.CompletedTask;
         },
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
         OnTokenValidated = async context =>
         {
             var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<SharedClassLibrary.Models.ApplicationUser>>();
@@ -134,11 +139,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()
-              .WithExposedHeaders("Set-Cookie");
+              .WithExposedHeaders("Set-Cookie")
+              .SetIsOriginAllowedToAllowWildcardSubdomains();
     });
 });
 
