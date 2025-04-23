@@ -161,7 +161,7 @@ export default function AddExpenseDialog({
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="vendor" className="text-sm font-medium">
-              Vendor
+              Where( Place)
             </Label>
             <Input
               id="vendor"
