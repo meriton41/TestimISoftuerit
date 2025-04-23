@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -27,6 +27,7 @@ export default function RegisterForm() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const router = useRouter();
   const { login, user } = useAuth();
@@ -34,6 +35,7 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage(""); // Clear previous success message
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -63,8 +65,33 @@ export default function RegisterForm() {
       const response = await axios.post(url, data, { headers });
 
       if (response.data && response.data.flag) {
-        await login(email, password);
-        router.push("/dashboard");
+        setSuccessMessage("Verify your email"); // Show message after clicking create account
+
+        // After successful registration, start polling to check if email is verified
+        const checkEmailVerified = async () => {
+          try {
+            const res = await axios.get(
+              `https://localhost:7176/api/account/check-email-verified?email=${encodeURIComponent(
+                email
+              )}`
+            );
+            if (res.data.isVerified) {
+              router.push("/");
+            }
+          } catch (error) {
+            // Ignore errors during polling
+          }
+        };
+
+        // Poll every 3 seconds
+        const intervalId = setInterval(async () => {
+          await checkEmailVerified();
+        }, 3000);
+
+        // Optionally, stop polling after some time (e.g., 5 minutes)
+        setTimeout(() => {
+          clearInterval(intervalId);
+        }, 5 * 60 * 1000);
       } else {
         setError(
           response.data?.message || "Registration failed. Please try again."
@@ -127,6 +154,11 @@ export default function RegisterForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="text-red-500 text-center mb-4">{error}</div>
+              )}
+              {successMessage && (
+                <div className="text-green-600 text-center mb-4">
+                  {successMessage}
+                </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">

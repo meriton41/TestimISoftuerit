@@ -47,15 +47,16 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   // Redirect to login after 3 seconds if successful
-  useEffect(() => {
-    if (status === "success") {
-      const timer = setTimeout(() => {
-        router.push("/login");
-      }, 3000);
+  // Removed redirect as per user request
+  // useEffect(() => {
+  //   if (status === "success") {
+  //     const timer = setTimeout(() => {
+  //       router.push("/");
+  //     }, 3000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [status, router]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [status, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
