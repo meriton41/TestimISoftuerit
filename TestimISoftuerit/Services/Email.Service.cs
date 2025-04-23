@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Mail;
 
@@ -22,17 +22,72 @@ namespace TestimISoftuerit.Services
             var port = int.Parse(smtpSettings["Port"]);
             var enableSsl = bool.Parse(smtpSettings["EnableSsl"]);
 
-            // ✅ Correct token usage, already encoded
+            // Correct token usage, already encoded
             var verifyUrl = $"http://localhost:3000/verify-email?token={encodedToken}";
 
-            // ✅ FIXED HTML body: use double-double-quotes for quotes in a verbatim string
+            // Updated HTML email template with button containing the verification link
+            var htmlBody = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+         <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ text-align: center; margin-bottom: 20px; }}
+        .logo {{ max-width: 300px; width: 100%; height: auto; }}
+        .button {{ 
+            background-color: #007bff; 
+            color: #ffffff; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            display: inline-block; 
+            margin: 15px 0;
+            font-weight: bold;
+        }}
+        .footer {{ 
+            margin-top: 30px; 
+            font-size: 12px; 
+            color: #777; 
+            text-align: center;
+        }}
+        .code {{ 
+            background: #f5f5f5; 
+            padding: 10px; 
+            word-break: break-all;
+            font-family: monospace;
+        }}
+    </style>
+</head>
+<body>
+    <div class=""header"">
+        <img src=""https://i.pinimg.com/736x/e4/1f/c3/e41fc3eac93fd4d3f0682f0b97189666.jpg"" alt=""FinanceSyn logo"" class=""logo"">
+    </div>
+
+    <h2>Verifikim te llogaris</h2>
+    <p>Hello,</p>
+    <p>Thank you for registering with FinanceSync. Please verify your email address by clicking the button below:</p>
+
+    <p>
+        <a href=""{verifyUrl}"" style=""background-color: #007bff; color: #ffffff !important; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;"">Verify Email Address</a>
+    </p>
+
+    <p>If you didn't request this, please ignore this email.</p>
+
+    <div class=""footer"">
+        <p>© 2023 FinanceSync. All rights reserved.</p>
+        <p>
+            FinancSync Inc.<br>
+            123 Auto Street, Tirana, Albania
+        </p>
+    </div>
+</body>
+</html>
+";
+
             var message = new MailMessage(fromAddress, toEmail)
             {
                 Subject = "Verify your email",
-                Body = $@"
-                    <h2>Verify Your Email</h2>
-                    <p>Click the link below to verify your account:</p>
-                    <p><a href=""{verifyUrl}"">{verifyUrl}</a></p>",
+                Body = htmlBody,
                 IsBodyHtml = true
             };
 

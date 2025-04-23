@@ -68,6 +68,8 @@ export default function RegisterForm() {
         setSuccessMessage("Verify your email"); // Show message after clicking create account
 
         // After successful registration, start polling to check if email is verified
+        let intervalId: NodeJS.Timeout | null = null;
+
         const checkEmailVerified = async () => {
           try {
             const res = await axios.get(
@@ -76,6 +78,9 @@ export default function RegisterForm() {
               )}`
             );
             if (res.data.isVerified) {
+              if (intervalId) {
+                clearInterval(intervalId);
+              }
               router.push("/");
             }
           } catch (error) {
@@ -84,13 +89,15 @@ export default function RegisterForm() {
         };
 
         // Poll every 3 seconds
-        const intervalId = setInterval(async () => {
+        intervalId = setInterval(async () => {
           await checkEmailVerified();
         }, 3000);
 
         // Optionally, stop polling after some time (e.g., 5 minutes)
         setTimeout(() => {
-          clearInterval(intervalId);
+          if (intervalId) {
+            clearInterval(intervalId);
+          }
         }, 5 * 60 * 1000);
       } else {
         setError(

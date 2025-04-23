@@ -88,7 +88,8 @@ export default function VerifyEmailPage() {
               {message}
             </h2>
             <p className="mt-2 text-sm text-gray-500">
-              You'll be redirected to the login page shortly...
+              If you have successfully verified your email, you can go back to
+              your register form !
             </p>
           </div>
         )}
