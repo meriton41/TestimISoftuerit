@@ -1,11 +1,12 @@
 "use client";
 
-import DashboardLayout from "@/components/dashboard-layout";
-import AddCashForm from "@/components/add-cash-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DashboardLayout from "../../../components/dashboard-layout";
+import AddCashForm from "../../../components/add-cash-form";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { transactionService } from "@/services/api";
+import { transactionService } from "../../../services/api";
+import IncomeTable from "../../../components/income-table";
 
 export default function AddCash() {
   const [balance, setBalance] = useState<number>(0);
@@ -16,11 +17,11 @@ export default function AddCash() {
       try {
         const transactions = await transactionService.getTransactions();
         const totalIncome = transactions
-          .filter((t) => t.type === "income")
-          .reduce((sum, t) => sum + t.sum, 0);
+          .filter((t: { type: string }) => t.type === "income")
+          .reduce((sum: number, t: { sum: number }) => sum + t.sum, 0);
         const totalExpenses = transactions
-          .filter((t) => t.type === "expense")
-          .reduce((sum, t) => sum + t.sum, 0);
+          .filter((t: { type: string }) => t.type === "expense")
+          .reduce((sum: number, t: { sum: number }) => sum + t.sum, 0);
         setBalance(totalIncome - totalExpenses);
       } catch (err) {
         console.error("Failed to fetch balance:", err);
@@ -107,6 +108,8 @@ export default function AddCash() {
                 </ul>
               </CardContent>
             </Card>
+
+            <IncomeTable />
           </div>
         </div>
       </div>

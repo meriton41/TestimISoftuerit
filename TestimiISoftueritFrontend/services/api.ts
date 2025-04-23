@@ -241,6 +241,58 @@ export const transactionService = {
     }
   },
 
+  updateIncome: async (id: number, data: { source: string; amount: number; date: string; categoryId?: number; description?: string }) => {
+    try {
+      const token = Cookies.get('token');
+      const userCookie = Cookies.get('user');
+      const user = userCookie ? JSON.parse(userCookie) : null;
+
+      if (!user?.id || !token) {
+        throw new Error("User not authenticated");
+      }
+
+      const requestData = {
+        ...data,
+        userId: user.id,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      };
+
+      const response = await api.put(`/Income/${id}`, requestData);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating income:", error);
+      throw error;
+    }
+  },
+
+  deleteIncome: async (id: number) => {
+    try {
+      const userCookie = Cookies.get('user');
+      const user = userCookie ? JSON.parse(userCookie) : null;
+
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      // First verify the income belongs to the current user
+      const income = await api.get(`/Income/${id}`);
+      if (income.data.userId !== user.id) {
+        throw new Error("Unauthorized access to income");
+      }
+
+      const response = await api.delete(`/Income/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting income:", error);
+      throw error;
+    }
+  },
+
   addExpense: async (data: {
     vendor: string;
     categoryId: string;

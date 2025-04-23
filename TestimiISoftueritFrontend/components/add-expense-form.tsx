@@ -155,7 +155,7 @@ export default function AddExpenseForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="vendor">Vendor</Label>
+        <Label htmlFor="vendor">Where</Label>
         <Input
           id="vendor"
           value={vendor}
