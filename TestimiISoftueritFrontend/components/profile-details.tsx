@@ -1,45 +1,52 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Pencil, Save } from "lucide-react"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Pencil, Save } from "lucide-react";
 
 interface ProfileDetailsProps {
-  user: {
-    name: string
-    surname: string
-    username: string
-    password: string
-  }
+  name: string;
+  email: string;
+  role: string;
+  onUpdate: (updatedName: string) => void;
 }
 
-export default function ProfileDetails({ user }: ProfileDetailsProps) {
-  const [isEditing, setIsEditing] = useState(false)
+export default function ProfileDetails({ name, email, role, onUpdate }: ProfileDetailsProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user.name,
-    surname: user.surname,
-    username: user.username,
-    password: user.password,
-  })
+    name: name,
+  });
+
+  useEffect(() => {
+    setFormData({ name });
+  }, [name]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
+    const { value } = e.target;
+    setFormData({ name: value });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, this would call the API
-    console.log("Form submitted:", formData)
-    setIsEditing(false)
-  }
+    e.preventDefault();
+    onUpdate(formData.name);
+    setIsEditing(false);
+  };
+
+  const handleButtonClick = () => {
+    if (isEditing) {
+      // Submit the form programmatically with type assertion
+      const form = document.getElementById("profile-form") as HTMLFormElement | null;
+      if (form) {
+        form.requestSubmit();
+      }
+    } else {
+      setIsEditing(true);
+    }
+  };
 
   return (
     <Card>
@@ -48,9 +55,8 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
         <Button
           variant={isEditing ? "default" : "outline"}
           size="sm"
-          onClick={() => (isEditing ? handleSubmit : setIsEditing(true))}
-          type={isEditing ? "submit" : "button"}
-          form={isEditing ? "profile-form" : undefined}
+          onClick={handleButtonClick}
+          type="button"
         >
           {isEditing ? (
             <>
@@ -67,53 +73,24 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
       </CardHeader>
       <CardContent>
         <form id="profile-form" onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">First Name</Label>
-              {isEditing ? (
-                <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
-              ) : (
-                <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.name}</div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="surname">Last Name</Label>
-              {isEditing ? (
-                <Input id="surname" name="surname" value={formData.surname} onChange={handleChange} required />
-              ) : (
-                <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.surname}</div>
-              )}
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="name">Name</Label>
             {isEditing ? (
-              <Input id="username" name="username" value={formData.username} onChange={handleChange} required />
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             ) : (
-              <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.username}</div>
+              <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{formData.name}</div>
             )}
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            {isEditing ? (
-              <Input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            ) : (
-              <div className="p-2 rounded-md bg-gray-50 border border-gray-100">••••••••</div>
-            )}
+            <Label htmlFor="email">Email</Label>
+            <div className="p-2 rounded-md bg-gray-50 border border-gray-100">{email}</div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <div className="p-2 rounded-md bg-gray-50 border border-gray-100 capitalize">{role}</div>
           </div>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
-

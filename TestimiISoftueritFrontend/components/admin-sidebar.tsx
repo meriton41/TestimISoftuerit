@@ -16,6 +16,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 
+
 interface AdminSidebarProps {
   user: {
     name: string
@@ -28,6 +29,10 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // New state for fetched user data
+  const [fetchedUserName, setFetchedUserName] = useState<string>("")
+  const [fetchedUserRole, setFetchedUserRole] = useState<string>("")
 
   const handleLogout = () => {
     // In a real app, this would call the API to logout
@@ -42,6 +47,27 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])
+
+  // Fetch user data from backend on mount
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const response = await fetch("/api/user") // Adjust API endpoint as needed
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data")
+        }
+        const data = await response.json()
+        setFetchedUserName(data.name)
+        setFetchedUserRole(data.role)
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        // Optionally fallback to prop user data
+        setFetchedUserName(user.name)
+        setFetchedUserRole(user.role)
+      }
+    }
+    fetchUserData()
+  }, [user.name, user.role])
 
   return (
     <SidebarProvider>
@@ -111,11 +137,11 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
         <SidebarFooter className="p-4">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold">
-              A
+              {fetchedUserName ? fetchedUserName.charAt(0).toUpperCase() : "A"}
             </div>
             <div>
-              <p className="font-medium text-sm">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.role}</p>
+              <p className="font-medium text-sm">{fetchedUserName || user.name}</p>
+              <p className="text-xs text-muted-foreground">{fetchedUserRole || user.role}</p>
             </div>
           </div>
 
@@ -200,11 +226,11 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
             <div className="absolute bottom-0 left-0 w-full p-4 border-t border-gray-200">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold">
-                  A
+                  {fetchedUserName ? fetchedUserName.charAt(0).toUpperCase() : "A"}
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-500">{user.role}</p>
+                  <p className="font-medium text-sm">{fetchedUserName || user.name}</p>
+                  <p className="text-xs text-gray-500">{fetchedUserRole || user.role}</p>
                 </div>
               </div>
 
