@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { transactionService } from "@/services/api";
-import EditIncomeForm from "./edit-income-form.tsx";
+import EditIncomeForm from "./edit-income-form";
 import {
   AlertDialog,
   AlertDialogAction,
