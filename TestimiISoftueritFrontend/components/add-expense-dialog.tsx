@@ -53,6 +53,10 @@ export default function AddExpenseDialog({
   const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
 
+  // Validation error states
+  const [amountError, setAmountError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -75,6 +79,11 @@ export default function AddExpenseDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Reset errors
+    setAmountError(null);
+    setDateError(null);
+
     if (!vendor || !categoryId || !amount || !date) {
       toast({
         title: "Error",
@@ -84,26 +93,20 @@ export default function AddExpenseDialog({
       return;
     }
 
+    const amountValue = parseFloat(amount);
+    if (isNaN(amountValue) || amountValue < 0.01 || amountValue > 99999) {
+      setAmountError("Amount must be between 0.01 and 99999");
+      return;
+    }
+
+    const today = new Date();
+    if (date > today) {
+      setDateError("Date cannot be in the future");
+      return;
+    }
+
     setLoading(true);
     try {
-      const amountValue = parseFloat(amount);
-      if (isNaN(amountValue) || amountValue <= 0) {
-        toast({
-          title: "Error",
-          description: "Amount must be a positive number",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log("Submitting expense with data:", {
-        vendor,
-        categoryId,
-        amount: amountValue.toString(),
-        date: date.toISOString(),
-        description: description || undefined,
-      });
-
       await transactionService.addExpense({
         vendor,
         categoryId,
@@ -207,6 +210,9 @@ export default function AddExpenseDialog({
               step="0.01"
               required
             />
+            {amountError && (
+              <p className="text-red-600 text-sm mt-1">{amountError}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium">
@@ -221,7 +227,9 @@ export default function AddExpenseDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Date</Label>
+            <Label htmlFor="date" className="text-sm font-medium">
+              Date
+            </Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -244,6 +252,9 @@ export default function AddExpenseDialog({
                 />
               </PopoverContent>
             </Popover>
+            {dateError && (
+              <p className="text-red-600 text-sm mt-1">{dateError}</p>
+            )}
           </div>
           <div className="flex justify-end space-x-2">
             <Button
