@@ -47,15 +47,12 @@ export default function AddCashForm() {
       const amountValue = Number(formData.amount);
 
       if (amountValue === 0) {
-        throw new Error("Amount cannot be 0");
+        throw new Error("Amount must be between 0.01 and 99999");
       }
 
-      if (amountValue === 999999) {
-        throw new Error("Amount cannot be 999999");
-      }
-
-      if (amountValue === 1000000) {
-        throw new Error("Amount cannot be 1000000");
+     
+      if (amountValue === 100000) {
+        throw new Error("Amount must be between 0.01 and 99999");
       }
 
       if (amountValue < 0) {
