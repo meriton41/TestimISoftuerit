@@ -30,7 +30,7 @@ export default function AddCashForm() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -40,13 +40,40 @@ export default function AddCashForm() {
       if (!formData.source.trim()) {
         throw new Error("Source is required");
       }
-      if (!formData.amount || Number(formData.amount) <= 0) {
+      if (!formData.amount) {
+        throw new Error("Amount is required");
+      }
+
+      const amountValue = Number(formData.amount);
+
+      if (amountValue === 0) {
+        throw new Error("Amount cannot be 0");
+      }
+
+      if (amountValue === 999999) {
+        throw new Error("Amount cannot be 999999");
+      }
+
+      if (amountValue === 1000000) {
+        throw new Error("Amount cannot be 1000000");
+      }
+
+      if (amountValue < 0) {
         throw new Error("Amount must be greater than 0");
+      }
+
+      // New validation: date must be today or earlier (not future)
+      const today = new Date();
+      const selectedDate = new Date(formData.date);
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        throw new Error("Date cannot be in the future");
       }
 
       const response = await transactionService.addIncome({
         source: formData.source.trim(),
-        amount: Number(formData.amount),
+        amount: amountValue,
         date: formData.date,
         type: "income",
       });
