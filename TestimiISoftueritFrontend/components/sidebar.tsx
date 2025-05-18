@@ -11,7 +11,6 @@ import {
   X,
   BarChart3,
   CreditCard,
-  Settings,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -81,17 +80,33 @@ export default function AppSidebar({ user }: SidebarProps) {
               <span>Add Income</span>
             </Link>
 
-            <Link
-              href="/dashboard/expenses"
-              className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                isActive("/dashboard/expenses")
-                  ? "bg-emerald-50 text-emerald-600"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              <CreditCard className="h-5 w-5" />
-              <span>Expenses</span>
-            </Link>
+            <div>
+              <Link
+                href="/dashboard/expenses"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                  isActive("/dashboard/expenses")  // Removed the OR condition here
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <CreditCard className="h-5 w-5" />
+                <span>Add Expenses</span>
+              </Link>
+
+              <div className="mt-1 space-y-1">
+                <Link
+                  href="/admin/category"
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                    isActive("/admin/category")  // Only check for this path
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <PlusCircle className="h-5 w-5" />
+                  <span>Add Category</span>
+                </Link>
+              </div>
+            </div>
 
             <Link
               href="/dashboard/reports"
@@ -118,14 +133,6 @@ export default function AppSidebar({ user }: SidebarProps) {
               >
                 <User className="h-5 w-5" />
                 <span>Profile</span>
-              </Link>
-
-              <Link
-                href="#"
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
-              >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
               </Link>
             </nav>
           </div>
@@ -216,17 +223,32 @@ export default function AppSidebar({ user }: SidebarProps) {
                 <span>Add Income</span>
               </Link>
 
-              <Link
-                href="/dashboard/expenses"
-                className={`flex items-center gap-3 px-3 py-2 rounded-md ${
-                  isActive("/dashboard/expenses")
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <CreditCard className="h-5 w-5" />
-                <span>Expenses</span>
-              </Link>
+              <div>
+                <Link
+                  href="/dashboard/expenses"
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                    isActive("/dashboard/expenses")  // Removed OR condition
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <span>Expenses</span>
+                </Link>
+              <div className="mt-1 space-y-1">
+                <Link
+                  href="/admin/category"
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md ${
+                    isActive("/admin/category")  // Only check this path
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <PlusCircle className="h-5 w-5" />
+                  <span>Category</span>
+                </Link>
+              </div>
+              </div>
 
               <Link
                 href="/dashboard/reports"
@@ -253,14 +275,6 @@ export default function AppSidebar({ user }: SidebarProps) {
                 <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
-
-              <Link
-                href="#"
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100"
-              >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
-              </Link>
             </div>
 
             <div className="absolute bottom-0 left-0 w-full p-4 border-t border-gray-200">
@@ -279,7 +293,7 @@ export default function AppSidebar({ user }: SidebarProps) {
 
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 hover:bg-red-50"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Log Out</span>
