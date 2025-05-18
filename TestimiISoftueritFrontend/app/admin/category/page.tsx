@@ -31,6 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import api from "../../../services/api";
+
 interface Category {
   id: number;
   name: string;
@@ -48,8 +50,6 @@ export default function CategoryPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { toast } = useToast();
 
-  const API_BASE = "https://localhost:7176/api/Category";
-
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -57,9 +57,8 @@ export default function CategoryPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await fetch(API_BASE, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch categories");
-      const data: Category[] = await res.json();
+      const res = await api.get('/Category');
+      const data: Category[] = res.data;
       setCategories(data.filter((c) => c.type === "Expense"));
     } catch (err) {
       toast({ variant: "destructive", title: "Error", description: "Could not load categories" });
@@ -85,16 +84,11 @@ export default function CategoryPage() {
 
     try {
       const isEdit = typeof editing.id === "number";
-      const url = isEdit ? `${API_BASE}/${editing.id}` : API_BASE;
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editing.name, type: "Expense" }),
-      });
-      if (!res.ok) throw new Error(isEdit ? "Update failed" : "Create failed");
+      if (isEdit) {
+        await api.put(`/Category/${editing.id}`, { name: editing.name, type: "Expense" });
+      } else {
+        await api.post('/Category', { name: editing.name, type: "Expense" });
+      }
 
       toast({ title: isEdit ? "Category updated" : "Category added" });
       setEditing(null);
@@ -114,11 +108,7 @@ export default function CategoryPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`${API_BASE}/${deleteTarget.id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Delete failed");
+      await api.delete(`/Category/${deleteTarget.id}`);
       toast({ title: "Category deleted" });
       fetchCategories();
     } catch {
@@ -137,10 +127,10 @@ export default function CategoryPage() {
       <main className="flex-1 p-6 bg-gray-50 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Expense Categories</h1>
-         <Button onClick={startAdd}>
-  <Plus className="w-4 h-4 mr-2" />
-  Add Category
-</Button>
+          <Button onClick={startAdd}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Category
+          </Button>
         </div>
 
         <Card className="max-w-4xl mx-auto">
